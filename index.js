@@ -18,33 +18,36 @@ io.on("connection", (socket) => {
   console.log("✅ Un utilisateur est connecté :", socket.id);
 
   socket.on("user-connected", (userId) => {
-    console.log("use state connected", userId);
     connectedUsers.set(userId, socket.id);
     const onlineUsers = [...connectedUsers.keys()];
     io.emit("users-status", onlineUsers);
   });
 
-  socket.on("send-message", ({ message, senderId }) => {
-    console.log("msg received in backend", message);
+  socket.on("send-message", ({ messageId, message, senderId }) => {
     socket.broadcast.emit("receive-message", {
-      message: message,
-      senderId: senderId,
-      id: socket.id,
+      message,
+      senderId,
+      id: messageId,
+    });
+  });
+
+  socket.on("react-to-message", ({ messageId, reaction, senderId }) => {
+    socket.broadcast.emit("message-reacted", {
+      messageId,
+      reaction,
+      senderId,
     });
   });
 
   socket.on("typing", (userId) => {
-    console.log("User is typing:", userId);
     socket.broadcast.emit("user-typing", userId);
   });
 
   socket.on("stop-typing", (userId) => {
-    console.log("User stopped typing:", userId);
     socket.broadcast.emit("user-stopped-typing", userId);
   });
 
   socket.on("user-disconnected", (userId) => {
-    console.log("state: disconnected", userId);
     connectedUsers.delete(userId);
     const onlineUsers = [...connectedUsers.keys()];
 
